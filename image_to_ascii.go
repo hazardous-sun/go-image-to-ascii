@@ -9,6 +9,7 @@ import (
 	"strings"
 )
 
+// Used to print error messages to the CLI
 func printUsage(errorMessage string) {
 	fmt.Printf(
 		"Error: %s\n" +
@@ -17,24 +18,41 @@ func printUsage(errorMessage string) {
 			errorMessage)
 }
 
+// Config
+/*
+The configuration used during runtime. Contains the path to the image, the resize factor and the options.
+*/
 type Config struct {
 	path         string
 	resizeFactor float64
 	options      []string
 }
 
+/*
+Returns a Config struct.
+May fail depending on the inputs provided.
+*/
 func build(args []string) (*Config, error) {
-	values, err := getValues(args)
+	values, resizeFactor, err := getValues(args)
 
 	if err != nil {
 		return nil, err
 	}
 
-	fmt.Println("build ran successfully!\n", values)
-	return nil, nil
+	config := Config{
+		path:         values[0],
+		resizeFactor: resizeFactor,
+		options:      values[1:],
+	}
+
+	return &config, nil
 }
 
-func getValues(args []string) ([]string, error) {
+/*
+Collects the values passed to the main function and checks if they are valid.
+Will fail when no path or resize factor are passed.
+*/
+func getValues(args []string) ([]string, float64, error) {
 	var options []string
 	var path string
 	var resizeFactor float64
@@ -54,14 +72,14 @@ func getValues(args []string) ([]string, error) {
 	}
 
 	if len(path) == 0 {
-		return []string{}, fmt.Errorf("no path specified")
+		return []string{}, 0, fmt.Errorf("no path specified")
 	}
 
 	if resizeFactor == 0 {
-		return []string{}, fmt.Errorf("resize factor cannot be zero")
+		return []string{}, 0, fmt.Errorf("resize factor cannot be zero")
 	}
 
-	return append([]string{path}, options...), nil
+	return append([]string{path}, options...), resizeFactor, nil
 }
 
 func isValidOption(option string) bool {
