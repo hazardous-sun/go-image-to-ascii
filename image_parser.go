@@ -2,10 +2,23 @@ package main
 
 import (
 	"fmt"
+	"github.com/nfnt/resize"
 	"image"
 	"image/png"
 	"os"
 )
+
+func imageToAscii(config Config) {
+
+}
+
+func resizeImage(img image.Image, factor float64) image.Image {
+	bounds := img.Bounds()
+	newWidth := uint(float64(bounds.Dx()) * factor)
+	newHeight := uint(float64(bounds.Dy()) * factor)
+
+	return resize.Resize(newWidth, newHeight, img, resize.Lanczos3)
+}
 
 func readImage(imagePath string) {
 	// Open the image file
