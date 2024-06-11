@@ -19,7 +19,7 @@ func generateConfig() (*Config, error) {
 		return nil, fmt.Errorf("not enough args passed")
 	}
 
-	path := getImagePath(args)
+	values, err := getValues(args)
 }
 
 func printUsage(errorMessage string) {
@@ -28,17 +28,26 @@ func printUsage(errorMessage string) {
 		errorMessage)
 }
 
-func getImagePath(args []string) (string, error) {
-	var values []string
+func getValues(args []string) (string, error) {
+	var options []string
 	var path string
 
 	for _, v := range args {
-		if isValidPath(v) {
+		if isValidOption(v) {
+			options = append(options, v)
+		} else if isValidPath(v) {
 			path = v
 		}
 	}
 
 	return args[1], nil
+}
+
+func isValidOption(option string) bool {
+	if len(option) == 0 {
+		return false
+	}
+	return option[0] == '-' && (option[0:2] == "--" || len(option) > 2)
 }
 
 func isValidPath(path string) bool {
