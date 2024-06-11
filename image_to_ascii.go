@@ -1,4 +1,4 @@
-package go_image_to_ascii
+package main
 
 import (
 	"fmt"
@@ -7,28 +7,34 @@ import (
 	"os"
 )
 
+func printUsage(errorMessage string) {
+	fmt.Printf(
+		"Error: %s\n"+
+			"USAGE:\n\t"+
+			"image-to-ascii [OPTIONS] [PATH]\n\t"+
+			"image-to-ascii [OPTIONS] -p [PATH]\n\t"+
+			"image-to-ascii [OPTIONS] --path [PATH]\n"+
+			"",
+		errorMessage)
+}
+
 type Config struct {
 	path         string
 	resizeFactor float64
 }
 
-func generateConfig() (*Config, error) {
-	args := os.Args
+func build(args []string) (*Config, error) {
+	values, err := getValues(args)
 
-	if len(args) < 2 {
-		return nil, fmt.Errorf("not enough args passed")
+	if err != nil {
+		return nil, err
 	}
 
-	values, err := getValues(args)
+	fmt.Println("build ran successfully!\n", values)
+	return nil, nil
 }
 
-func printUsage(errorMessage string) {
-	fmt.Printf(
-		"Error: %s\n USAGE:\n\timage-to-ascii [OPTIONS] -p [PATH]\n\timage-to-ascii [OPTIONS] --path [PATH]\n",
-		errorMessage)
-}
-
-func getValues(args []string) (string, error) {
+func getValues(args []string) ([]string, error) {
 	var options []string
 	var path string
 
@@ -40,31 +46,40 @@ func getValues(args []string) (string, error) {
 		}
 	}
 
-	return args[1], nil
+	if len(path) == 0 {
+		return []string{}, fmt.Errorf("no path specified")
+	}
+
+	return append([]string{path}, options...), nil
 }
 
 func isValidOption(option string) bool {
 	if len(option) == 0 {
 		return false
 	}
-	return option[0] == '-' && (option[0:2] == "--" || len(option) > 2)
+
+	return option[0] == '-' || (option[0:2] == "--" && len(option) > 2)
 }
 
 func isValidPath(path string) bool {
 	_, err := os.Stat(path)
+
 	if err != nil {
 		return false
 	}
+
 	return true
 }
 
 func readImage(imagePath string) {
 	// Open the image file
 	file, err := os.Open(imagePath)
+
 	if err != nil {
 		fmt.Println("Error opening file:", err)
 		return
 	}
+
 	defer file.Close()
 
 	// Register PNG decoder
