@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 )
 
@@ -11,9 +12,11 @@ func main() {
 		printUsage("not enough args passed")
 	}
 
-	_, err := build(args[1:])
+	config, err := build(args[1:])
 
 	if err != nil {
 		println(err.Error())
 	}
+
+	fmt.Println("config:", config)
 }
