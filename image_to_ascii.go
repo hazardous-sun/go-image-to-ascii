@@ -5,22 +5,22 @@ import (
 	"image"
 	"image/png"
 	"os"
+	"strconv"
+	"strings"
 )
 
 func printUsage(errorMessage string) {
 	fmt.Printf(
-		"Error: %s\n"+
-			"USAGE:\n\t"+
-			"image-to-ascii [OPTIONS] [PATH]\n\t"+
-			"image-to-ascii [OPTIONS] -p [PATH]\n\t"+
-			"image-to-ascii [OPTIONS] --path [PATH]\n"+
-			"",
-		errorMessage)
+		"Error: %s\n" +
+			"USAGE:\n\t" +
+			"image-to-ascii [OPTIONS] [PATH] [RESIZE_FACTOR]\n" +
+			errorMessage)
 }
 
 type Config struct {
 	path         string
 	resizeFactor float64
+	options      []string
 }
 
 func build(args []string) (*Config, error) {
@@ -37,17 +37,28 @@ func build(args []string) (*Config, error) {
 func getValues(args []string) ([]string, error) {
 	var options []string
 	var path string
+	var resizeFactor float64
 
 	for _, v := range args {
+		v = strings.TrimSpace(v)
 		if isValidOption(v) {
 			options = append(options, v)
 		} else if isValidPath(v) {
 			path = v
+		} else {
+			factor, err := getResizeFactor(v)
+			if err == nil {
+				resizeFactor = factor
+			}
 		}
 	}
 
 	if len(path) == 0 {
 		return []string{}, fmt.Errorf("no path specified")
+	}
+
+	if resizeFactor == 0 {
+		return []string{}, fmt.Errorf("resize factor cannot be zero")
 	}
 
 	return append([]string{path}, options...), nil
@@ -69,6 +80,16 @@ func isValidPath(path string) bool {
 	}
 
 	return true
+}
+
+func getResizeFactor(value string) (float64, error) {
+	factor, err := strconv.ParseFloat(value, 64)
+
+	if err != nil {
+		return 0, err
+	}
+
+	return factor, nil
 }
 
 func readImage(imagePath string) {
