@@ -24,7 +24,7 @@ func imageToAscii(config Config) {
 		return
 	}
 
-	defer file.Close()
+	defer file.Close() // close the file after imageToAscii returns
 
 	// 2 - identify image type
 
