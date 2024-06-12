@@ -80,6 +80,9 @@ func getValues(args []string) ([]string, float64, error) {
 	return append([]string{path}, options...), resizeFactor, nil
 }
 
+/*
+Checks if the value is a valid option. An option should begin with either "-" or "--"
+*/
 func isValidOption(option string) bool {
 	if len(option) == 0 {
 		return false
@@ -88,6 +91,9 @@ func isValidOption(option string) bool {
 	return option[0] == '-' || (option[0:2] == "--" && len(option) > 2)
 }
 
+/*
+Checks if the value is a valid path.
+*/
 func isValidPath(path string) bool {
 	_, err := os.Stat(path)
 
@@ -98,6 +104,9 @@ func isValidPath(path string) bool {
 	return true
 }
 
+/*
+Checks if the value is a valid float64 and returns it if the parse succeeds.
+*/
 func getResizeFactor(value string) (float64, error) {
 	factor, err := strconv.ParseFloat(value, 64)
 
