@@ -9,7 +9,20 @@ import (
 )
 
 func imageToAscii(config Config) {
+	// 1- open image
+	file, err := os.Open(imagePath)
 
+	if err != nil {
+		fmt.Println("Error opening file:", err)
+		return
+	}
+
+	defer file.Close()
+
+	// 2 - identify image type
+
+	// 3- resize image
+	// 4- turn the image bw
 }
 
 func resizeImage(img image.Image, factor float64) image.Image {
