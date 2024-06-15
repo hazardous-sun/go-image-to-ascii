@@ -51,6 +51,8 @@ func imageToAscii(config Config) error {
 		return fmt.Errorf("error removing color from image: " + err.Error())
 	}
 
+	printPixelsValues(metadata)
+
 	return nil
 }
 
@@ -188,6 +190,14 @@ func removeColor(img image.Image) (image.Image, error) {
 		}
 	}
 	return gray, nil
+}
+
+func printPixelsValues(metadata ImageData) {
+	for y := 0; y < metadata.height; y++ {
+		for x := 0; x < metadata.width; x++ {
+			fmt.Println(metadata.img.At(x, y))
+		}
+	}
 }
 
 func readImage(imagePath string) {
