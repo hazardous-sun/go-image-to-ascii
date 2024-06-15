@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"github.com/nfnt/resize"
 	"image"
+	"image/gif"
+	"image/jpeg"
 	"image/png"
 	"os"
 )
@@ -36,10 +38,20 @@ func imageToAscii(config Config) {
 Tries to convert the file to Image and returns some metadata about it.
 Will fail if the file is an unsupported format.
 */
-func convertImage(file os.File) (ImageData, error) {
-	var img image.Image
+func convertImage(file *os.File) (ImageData, error) {
 	var height, width int
-	var format string
+
+	format, err := getFormat(file)
+
+	if err != nil {
+		return ImageData{}, err
+	}
+
+	img, err := loadImage(file, format)
+
+	if err != nil {
+		return ImageData{}, err
+	}
 
 	return ImageData{
 		img:    img,
@@ -50,8 +62,8 @@ func convertImage(file os.File) (ImageData, error) {
 }
 
 func getFormat(file *os.File) (string, error) {
-	if isJPG(file) {
-		return "jpg", nil
+	if isJPEG(file) {
+		return "jpeg", nil
 	} else if isPNG(file) {
 		return "png", nil
 	} else if isGIF(file) {
@@ -61,7 +73,7 @@ func getFormat(file *os.File) (string, error) {
 	}
 }
 
-func isJPG(file *os.File) bool {
+func isJPEG(file *os.File) bool {
 	buffer := make([]byte, 2)
 	_, err := file.ReadAt(buffer, 0)
 
@@ -96,6 +108,20 @@ func isGIF(file *os.File) bool {
 	}
 
 	return string(buffer) == "GIF89a"
+}
+
+func loadImage(file *os.File, format string) (image.Image, error) {
+	switch format {
+	case "jpeg":
+		image.RegisterFormat("jpeg", "jpeg", jpeg.Decode, jpeg.DecodeConfig)
+		return jpeg.Decode(file)
+	case "png":
+		image.RegisterFormat("png", "png", png.Decode, png.DecodeConfig)
+		return png.Decode(file)
+	case "gif":
+		image.RegisterFormat("gif", "gif", gif.Decode, gif.DecodeConfig)
+		return gif.Decode(file)
+	}
 }
 
 func resizeImage(img image.Image, factor float64) image.Image {
