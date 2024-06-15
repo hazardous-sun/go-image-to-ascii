@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"os"
 )
 
@@ -15,8 +14,12 @@ func main() {
 	config, err := build(args[1:])
 
 	if err != nil {
-		println(err.Error())
+		panic(err)
 	}
 
-	fmt.Println("config:", config)
+	err = imageToAscii(config)
+
+	if err != nil {
+		panic(err)
+	}
 }
