@@ -17,12 +17,12 @@ type ImageData struct {
 	format string
 }
 
-func imageToAscii(config Config) (string, error) {
+func imageToAscii(config Config) (image.Image, error) {
 	// 1- open image
 	file, err := os.Open(config.path)
 
 	if err != nil {
-		return "", fmt.Errorf("error opening file: " + err.Error())
+		return nil, fmt.Errorf("error opening file: " + err.Error())
 	}
 
 	defer file.Close() // close the file after imageToAscii returns
@@ -32,14 +32,21 @@ func imageToAscii(config Config) (string, error) {
 	metadata, err := collectMetadata(file)
 
 	if err != nil {
-		return "", fmt.Errorf("error getting metadata from file: " + err.Error())
+		return nil, fmt.Errorf("error getting metadata from file: " + err.Error())
 	}
 
 	// 3- resize image
 
 	metadata.img = resizeImage(metadata.img, config.resizeFactor)
 
-	// 4- turn the image bw
+	// 4- turn the image into grayscale
+	metadata.img, err = removeColor(metadata.img)
+
+	if err != nil {
+		return nil, fmt.Errorf("error removing color from image: " + err.Error())
+	}
+
+	return metadata.img, nil
 }
 
 /*
@@ -140,6 +147,19 @@ func resizeImage(img image.Image, factor float64) image.Image {
 	newHeight := uint(float64(bounds.Dy()) * factor)
 
 	return resize.Resize(newWidth, newHeight, img, resize.Lanczos3)
+}
+
+func removeColor(img image.Image) (image.Image, error) {
+	gray := image.NewGray(img.Bounds())
+	for y := range gray.Pix {
+		for x := range gray.Pix[y:] {
+			r, g, b, _ := img.At(x, y).RGBA()
+			// Calculate average for grayscale value
+			grayVal := (uint8(r) + uint8(g) + uint8(b)) / 3
+			gray.Pix[y*gray.Stride+x] = grayVal
+		}
+	}
+	return gray, nil
 }
 
 func readImage(imagePath string) {
