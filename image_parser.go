@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/nfnt/resize"
 	"image"
+	"image/draw"
 	"image/gif"
 	"image/jpeg"
 	"image/png"
@@ -15,10 +16,11 @@ import (
 Holds the image metadata used to resize and transform it into grayscale.
 */
 type ImageData struct {
-	img    image.Image
-	height int
-	width  int
-	format string
+	img       image.Image
+	height    int
+	width     int
+	grayscale image.Gray
+	format    string
 }
 
 // The function responsible for handling the logic of converting the image into ASCII
@@ -45,11 +47,7 @@ func imageToAscii(config Config) error {
 	resizeImage(&metadata, config)
 
 	// 4- turn the image into grayscale
-	metadata.img, err = removeColor(metadata.img)
-
-	if err != nil {
-		return fmt.Errorf("error removing color from image: " + err.Error())
-	}
+	removeColor(&metadata)
 
 	printPixelsValues(metadata)
 
@@ -179,17 +177,10 @@ func resizeImage(metadata *ImageData, config Config) {
 /*
 Transforms the image into grayscale
 */
-func removeColor(img image.Image) (image.Image, error) {
-	gray := image.NewGray(img.Bounds())
-	for y := range gray.Pix {
-		for x := range gray.Pix[y:] {
-			r, g, b, _ := img.At(x, y).RGBA()
-			// Calculate average for grayscale value
-			grayVal := (uint8(r) + uint8(g) + uint8(b)) / 3
-			gray.Pix[y*gray.Stride+x] = grayVal
-		}
-	}
-	return gray, nil
+func removeColor(metadata *ImageData) {
+	gray := image.NewGray(metadata.img.Bounds())
+	draw.Draw(gray, gray.Bounds(), metadata.img, image.ZP, draw.Src)
+	metadata.grayscale = *gray
 }
 
 func printPixelsValues(metadata ImageData) {
