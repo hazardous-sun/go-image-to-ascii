@@ -49,17 +49,15 @@ func convertImage(file os.File) (ImageData, error) {
 	}, nil
 }
 
-func getFormat(file *os.File) (*image.Image, error) {
+func getFormat(file *os.File) (string, error) {
 	if isJPG(file) {
-		return nil, nil
+		return "jpg", nil
 	} else if isPNG(file) {
-		return nil, nil
+		return "png", nil
 	} else if isGIF(file) {
-		return nil, nil
-	} else if isWEBP(file) {
-		return nil, nil
+		return "gif", nil
 	} else {
-		return nil, fmt.Errorf("format not supported")
+		return "", fmt.Errorf("format not supported")
 	}
 }
 
@@ -82,8 +80,7 @@ func isPNG(file *os.File) bool {
 
 	if err != nil {
 		return false
-	} else if buffer[0] == 0x89 && buffer[1] == 'P' && buffer[2] == 'N' && buffer[3] == 'G' &&
-		buffer[4] == '\r' && buffer[5] == '\n' && buffer[6] == 0x1a && buffer[7] == '\n' {
+	} else if string(buffer) == "PNG\r\n0x1a\n" {
 		return true
 	} else {
 		return false
@@ -91,11 +88,14 @@ func isPNG(file *os.File) bool {
 }
 
 func isGIF(file *os.File) bool {
-	return false
-}
+	buffer := make([]byte, 6)
+	_, err := file.ReadAt(buffer, 0)
 
-func isWEBP(file *os.File) bool {
-	return false
+	if err != nil {
+		return false
+	}
+
+	return string(buffer) == "GIF89a"
 }
 
 func resizeImage(img image.Image, factor float64) image.Image {
