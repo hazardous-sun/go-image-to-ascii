@@ -17,20 +17,28 @@ type ImageData struct {
 	format string
 }
 
-func imageToAscii(config Config) {
+func imageToAscii(config Config) (string, error) {
 	// 1- open image
 	file, err := os.Open(config.path)
 
 	if err != nil {
-		fmt.Println("Error opening file:", err)
-		return
+		return "", fmt.Errorf("error opening file: " + err.Error())
 	}
 
 	defer file.Close() // close the file after imageToAscii returns
 
-	// 2 - identify image type
+	// 2 - collect metadata
+
+	metadata, err := collectMetadata(file)
+
+	if err != nil {
+		return "", fmt.Errorf("error getting metadata from file: " + err.Error())
+	}
 
 	// 3- resize image
+
+	metadata.img = resizeImage(metadata.img, config.resizeFactor)
+
 	// 4- turn the image bw
 }
 
@@ -38,9 +46,7 @@ func imageToAscii(config Config) {
 Tries to convert the file to Image and returns some metadata about it.
 Will fail if the file is an unsupported format.
 */
-func convertImage(file *os.File) (ImageData, error) {
-	var height, width int
-
+func collectMetadata(file *os.File) (ImageData, error) {
 	format, err := getFormat(file)
 
 	if err != nil {
@@ -52,6 +58,10 @@ func convertImage(file *os.File) (ImageData, error) {
 	if err != nil {
 		return ImageData{}, err
 	}
+
+	bounds := img.Bounds()
+	width := bounds.Max.X
+	height := bounds.Max.Y
 
 	return ImageData{
 		img:    img,
