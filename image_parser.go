@@ -10,6 +10,10 @@ import (
 	"os"
 )
 
+// ImageData
+/*
+Holds the image metadata used to resize and transform it into grayscale.
+*/
 type ImageData struct {
 	img    image.Image
 	height int
@@ -17,12 +21,13 @@ type ImageData struct {
 	format string
 }
 
-func imageToAscii(config Config) (image.Image, error) {
+// The function responsible for handling the logic of converting the image into ASCII
+func imageToAscii(config Config) error {
 	// 1- open image
 	file, err := os.Open(config.path)
 
 	if err != nil {
-		return nil, fmt.Errorf("error opening file: " + err.Error())
+		return fmt.Errorf("error opening file: " + err.Error())
 	}
 
 	defer file.Close() // close the file after imageToAscii returns
@@ -32,26 +37,25 @@ func imageToAscii(config Config) (image.Image, error) {
 	metadata, err := collectMetadata(file)
 
 	if err != nil {
-		return nil, fmt.Errorf("error getting metadata from file: " + err.Error())
+		return fmt.Errorf("error getting metadata from file: " + err.Error())
 	}
 
 	// 3- resize image
 
-	metadata.img = resizeImage(metadata.img, config.resizeFactor)
+	metadata.img = resizeImage(metadata, config)
 
 	// 4- turn the image into grayscale
 	metadata.img, err = removeColor(metadata.img)
 
 	if err != nil {
-		return nil, fmt.Errorf("error removing color from image: " + err.Error())
+		return fmt.Errorf("error removing color from image: " + err.Error())
 	}
 
-	return metadata.img, nil
+	return nil
 }
 
 /*
 Tries to convert the file to Image and returns some metadata about it.
-Will fail if the file is an unsupported format.
 */
 func collectMetadata(file *os.File) (ImageData, error) {
 	format, err := getFormat(file)
@@ -78,6 +82,10 @@ func collectMetadata(file *os.File) (ImageData, error) {
 	}, nil
 }
 
+/*
+Tries to collect the format of the image.
+Will fail if the format is not supported.
+*/
 func getFormat(file *os.File) (string, error) {
 	if isJPEG(file) {
 		return "jpeg", nil
@@ -90,6 +98,9 @@ func getFormat(file *os.File) (string, error) {
 	}
 }
 
+/*
+Checks if the file is in the JPEG format.
+*/
 func isJPEG(file *os.File) bool {
 	buffer := make([]byte, 2)
 	_, err := file.ReadAt(buffer, 0)
@@ -103,6 +114,9 @@ func isJPEG(file *os.File) bool {
 	}
 }
 
+/*
+Checks if the file is in the PNG format.
+*/
 func isPNG(file *os.File) bool {
 	buffer := make([]byte, 8)
 	_, err := file.ReadAt(buffer, 0)
@@ -116,6 +130,9 @@ func isPNG(file *os.File) bool {
 	}
 }
 
+/*
+Checks if the file is in the GIF format.
+*/
 func isGIF(file *os.File) bool {
 	buffer := make([]byte, 6)
 	_, err := file.ReadAt(buffer, 0)
@@ -127,6 +144,9 @@ func isGIF(file *os.File) bool {
 	return string(buffer) == "GIF89a"
 }
 
+/*
+Decodes the image considering its format.
+*/
 func loadImage(file *os.File, format string) (image.Image, error) {
 	switch format {
 	case "jpeg":
@@ -143,14 +163,20 @@ func loadImage(file *os.File, format string) (image.Image, error) {
 	}
 }
 
-func resizeImage(img image.Image, factor float64) image.Image {
-	bounds := img.Bounds()
-	newWidth := uint(float64(bounds.Dx()) * factor)
-	newHeight := uint(float64(bounds.Dy()) * factor)
+/*
+Resizes the image based on the value of resizeFactor maintained in ImageData.
+*/
+func resizeImage(metadata ImageData, config Config) image.Image {
+	bounds := metadata.img.Bounds()
+	newWidth := uint(float64(bounds.Dx()) * config.resizeFactor)
+	newHeight := uint(float64(bounds.Dy()) * config.resizeFactor)
 
-	return resize.Resize(newWidth, newHeight, img, resize.Lanczos3)
+	return resize.Resize(newWidth, newHeight, metadata.img, resize.Lanczos3)
 }
 
+/*
+Transforms the image into grayscale
+*/
 func removeColor(img image.Image) (image.Image, error) {
 	gray := image.NewGray(img.Bounds())
 	for y := range gray.Pix {
