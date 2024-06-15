@@ -23,6 +23,7 @@ The configuration used during runtime. Contains the path to the image, the resiz
 type Config struct {
 	path         string
 	resizeFactor float64
+	reverse      bool
 	options      []string
 }
 
@@ -40,6 +41,7 @@ func build(args []string) (Config, error) {
 	return Config{
 		path:         values[0],
 		resizeFactor: resizeFactor,
+		reverse:      false,
 		options:      values[1:],
 	}, nil
 }

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/nfnt/resize"
 	"image"
+	"image/color"
 	"image/draw"
 	"image/gif"
 	"image/jpeg"
@@ -49,7 +50,7 @@ func imageToAscii(config Config) error {
 	// 4- turn the image into grayscale
 	removeColor(&metadata)
 
-	printPixelsValues(metadata)
+	printPixelsValues(metadata, config)
 
 	return nil
 }
@@ -183,10 +184,66 @@ func removeColor(metadata *ImageData) {
 	metadata.grayscale = *gray
 }
 
-func printPixelsValues(metadata ImageData) {
+func printPixelsValues(metadata ImageData, config Config) {
 	for y := 0; y < metadata.height; y++ {
 		for x := 0; x < metadata.width; x++ {
-			fmt.Println(metadata.img.At(x, y))
+			fmt.Print(getChar(metadata.grayscale.At(x, y), config.reverse))
 		}
+		fmt.Println()
+	}
+}
+
+func getChar(color color.Color, reverse bool) string {
+	chars := []string{
+		" ",
+		"□",
+		"▧",
+		"▥",
+		"▩",
+		"▦",
+		"▣",
+		"■",
+	}
+
+	_, _, _, intensity := color.RGBA()
+
+	if reverse {
+		switch {
+		case intensity > 225:
+			return chars[0]
+		case intensity > 193:
+			return chars[1]
+		case intensity > 161:
+			return chars[2]
+		case intensity > 129:
+			return chars[3]
+		case intensity > 97:
+			return chars[4]
+		case intensity > 65:
+			return chars[5]
+		case intensity > 33:
+			return chars[6]
+		default:
+			return chars[7]
+		}
+	}
+
+	switch {
+	case intensity < 32:
+		return chars[0]
+	case intensity < 64:
+		return chars[1]
+	case intensity < 96:
+		return chars[2]
+	case intensity < 128:
+		return chars[3]
+	case intensity < 160:
+		return chars[4]
+	case intensity < 192:
+		return chars[5]
+	case intensity < 224:
+		return chars[6]
+	default:
+		return chars[7]
 	}
 }
