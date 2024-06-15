@@ -42,7 +42,7 @@ func imageToAscii(config Config) error {
 
 	// 3- resize image
 
-	metadata.img = resizeImage(metadata, config)
+	resizeImage(&metadata, config)
 
 	// 4- turn the image into grayscale
 	metadata.img, err = removeColor(metadata.img)
@@ -166,12 +166,12 @@ func loadImage(file *os.File, format string) (image.Image, error) {
 /*
 Resizes the image based on the value of resizeFactor maintained in ImageData.
 */
-func resizeImage(metadata ImageData, config Config) image.Image {
+func resizeImage(metadata *ImageData, config Config) {
 	bounds := metadata.img.Bounds()
 	newWidth := uint(float64(bounds.Dx()) * config.resizeFactor)
 	newHeight := uint(float64(bounds.Dy()) * config.resizeFactor)
 
-	return resize.Resize(newWidth, newHeight, metadata.img, resize.Lanczos3)
+	metadata.img = resize.Resize(newWidth, newHeight, metadata.img, resize.Lanczos3)
 }
 
 /*
