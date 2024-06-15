@@ -138,6 +138,8 @@ func loadImage(file *os.File, format string) (image.Image, error) {
 	case "gif":
 		image.RegisterFormat("gif", "gif", gif.Decode, gif.DecodeConfig)
 		return gif.Decode(file)
+	default:
+		return nil, fmt.Errorf("unknown format: " + format)
 	}
 }
 
