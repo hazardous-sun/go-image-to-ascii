@@ -30,20 +30,18 @@ type Config struct {
 Returns a Config struct.
 May fail depending on the inputs provided.
 */
-func build(args []string) (*Config, error) {
+func build(args []string) (Config, error) {
 	values, resizeFactor, err := getValues(args)
 
 	if err != nil {
-		return nil, err
+		return Config{}, err
 	}
 
-	config := Config{
+	return Config{
 		path:         values[0],
 		resizeFactor: resizeFactor,
 		options:      values[1:],
-	}
-
-	return &config, nil
+	}, nil
 }
 
 /*
