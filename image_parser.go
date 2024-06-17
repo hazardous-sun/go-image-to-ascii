@@ -50,6 +50,7 @@ func imageToAscii(config Config) error {
 	// 4- turn the image into grayscale
 	removeColor(&metadata)
 
+	// 5- Iterate over each pixel and print each value to the cli as an ASCII char
 	printPixelsValues(metadata, config)
 
 	return nil
@@ -187,7 +188,8 @@ func removeColor(metadata *ImageData) {
 func printPixelsValues(metadata ImageData, config Config) {
 	for y := 0; y < metadata.height; y++ {
 		for x := 0; x < metadata.width; x++ {
-			fmt.Print(getChar(metadata.grayscale.At(x, y), config.reverse))
+			fmt.Println(metadata.img.At(x, y))
+			//fmt.Print(getChar(metadata.grayscale.At(x, y), config.reverse))
 		}
 		fmt.Println()
 	}
