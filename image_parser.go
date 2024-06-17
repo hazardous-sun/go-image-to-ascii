@@ -9,6 +9,7 @@ import (
 	"image/gif"
 	"image/jpeg"
 	"image/png"
+	"net/http"
 	"os"
 )
 
@@ -89,61 +90,29 @@ Tries to collect the format of the image.
 Will fail if the format is not supported.
 */
 func getFormat(file *os.File) (string, error) {
-	if isJPEG(file) {
-		return "jpeg", nil
-	} else if isPNG(file) {
+	buffer := make([]byte, 512)
+	n, err := file.Read(buffer)
+
+	if err != nil {
+		return "", err
+	}
+
+	if n < len(buffer) {
+		buffer = buffer[:n]
+	}
+
+	contentType := http.DetectContentType(buffer[:n])
+
+	switch contentType {
+	case "image/png":
 		return "png", nil
-	} else if isGIF(file) {
+	case "image/gif":
 		return "gif", nil
-	} else {
-		return "", fmt.Errorf("format not supported")
+	case "image/jpeg":
+		return "jpeg", nil
+	default:
+		return "", fmt.Errorf("unknown image format: %s", contentType)
 	}
-}
-
-/*
-Checks if the file is in the JPEG format.
-*/
-func isJPEG(file *os.File) bool {
-	buffer := make([]byte, 2)
-	_, err := file.ReadAt(buffer, 0)
-
-	if err != nil {
-		return false
-	} else if buffer[0] == 0xff && buffer[1] == 0xd8 {
-		return true
-	} else {
-		return false
-	}
-}
-
-/*
-Checks if the file is in the PNG format.
-*/
-func isPNG(file *os.File) bool {
-	buffer := make([]byte, 8)
-	_, err := file.ReadAt(buffer, 0)
-
-	if err != nil {
-		return false
-	} else if string(buffer) == "PNG\r\n0x1a\n" {
-		return true
-	} else {
-		return false
-	}
-}
-
-/*
-Checks if the file is in the GIF format.
-*/
-func isGIF(file *os.File) bool {
-	buffer := make([]byte, 6)
-	_, err := file.ReadAt(buffer, 0)
-
-	if err != nil {
-		return false
-	}
-
-	return string(buffer) == "GIF89a"
 }
 
 /*
@@ -188,14 +157,13 @@ func removeColor(metadata *ImageData) {
 func printPixelsValues(metadata ImageData, config Config) {
 	for y := 0; y < metadata.height; y++ {
 		for x := 0; x < metadata.width; x++ {
-			fmt.Println(metadata.img.At(x, y))
-			//fmt.Print(getChar(metadata.grayscale.At(x, y), config.reverse))
+			fmt.Print(getChar(metadata.grayscale.At(x, y), config.reverse))
 		}
 		fmt.Println()
 	}
 }
 
-func getChar(color color.Color, reverse bool) string {
+func getChar(grayscale color.Color, reverse bool) string {
 	chars := []string{
 		" ",
 		"□",
@@ -207,7 +175,8 @@ func getChar(color color.Color, reverse bool) string {
 		"■",
 	}
 
-	_, _, _, intensity := color.RGBA()
+	r, g, b, intensity := grayscale.RGBA()
+	fmt.Println(r, g, b, intensity)
 
 	if reverse {
 		switch {
