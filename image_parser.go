@@ -111,7 +111,8 @@ func getFormat(file *os.File) (string, error) {
 	case "image/jpeg":
 		return "jpeg", nil
 	default:
-		return "", fmt.Errorf("error: unknown image format: %s \n\t", contentType)
+		return "", fmt.Errorf("error: unknown image format: %s \n\t"+
+			"buffer: %v", contentType, buffer)
 	}
 }
 
