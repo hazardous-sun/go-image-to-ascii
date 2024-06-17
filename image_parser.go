@@ -181,7 +181,7 @@ Transforms the image into grayscale
 */
 func removeColor(metadata *ImageData) {
 	gray := image.NewGray(metadata.img.Bounds())
-	draw.Draw(gray, gray.Bounds(), metadata.img, image.ZP, draw.Src)
+	draw.Draw(gray, gray.Bounds(), metadata.img, image.Point{}, draw.Src)
 	metadata.grayscale = *gray
 }
 
