@@ -31,7 +31,7 @@ func imageToAscii(config Config) error {
 	file, err := os.Open(config.path)
 
 	if err != nil {
-		return fmt.Errorf("error opening file: " + err.Error())
+		return fmt.Errorf("error: could not open file: \n\t" + err.Error())
 	}
 
 	defer file.Close() // close the file after imageToAscii returns
@@ -41,7 +41,7 @@ func imageToAscii(config Config) error {
 	metadata, err := collectMetadata(file)
 
 	if err != nil {
-		return fmt.Errorf("error getting metadata from file: " + err.Error())
+		return fmt.Errorf("error: could not collect metadata from file: \n\t" + err.Error())
 	}
 
 	// 3- resize image
@@ -111,7 +111,7 @@ func getFormat(file *os.File) (string, error) {
 	case "image/jpeg":
 		return "jpeg", nil
 	default:
-		return "", fmt.Errorf("unknown image format: %s", contentType)
+		return "", fmt.Errorf("error: unknown image format: %s \n\t", contentType)
 	}
 }
 
