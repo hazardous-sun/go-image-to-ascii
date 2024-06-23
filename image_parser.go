@@ -20,8 +20,8 @@ Holds the image metadata used to resize and transform it into grayscale.
 */
 type ImageData struct {
 	img       image.Image
-	height    int
-	width     int
+	height    uint
+	width     uint
 	grayscale image.Gray
 	format    string
 }
@@ -75,8 +75,8 @@ func collectMetadata(file *os.File) (ImageData, error) {
 	}
 
 	bounds := img.Bounds()
-	width := bounds.Max.X
-	height := bounds.Max.Y
+	width := uint(bounds.Max.X)
+	height := uint(bounds.Max.Y)
 
 	return ImageData{
 		img:    img,
@@ -143,10 +143,10 @@ Resizes the image based on the value of resizeFactor maintained in ImageData.
 */
 func resizeImage(metadata *ImageData, config Config) {
 	bounds := metadata.img.Bounds()
-	newWidth := uint(float64(bounds.Dx()) * config.resizeFactor)
-	newHeight := uint(float64(bounds.Dy()) * config.resizeFactor)
+	metadata.width = uint(float64(bounds.Dx()) * config.resizeFactor * 1.5)
+	metadata.height = uint(float64(bounds.Dy()) * config.resizeFactor)
 
-	metadata.img = resize.Resize(newWidth, newHeight, metadata.img, resize.Lanczos3)
+	metadata.img = resize.Resize(metadata.width, metadata.height, metadata.img, resize.Lanczos3)
 }
 
 /*
@@ -159,8 +159,8 @@ func removeColor(metadata *ImageData) {
 }
 
 func printPixelsValues(metadata ImageData, config Config) {
-	for y := 0; y < metadata.height; y++ {
-		for x := 0; x < metadata.width; x++ {
+	for y := 0; y < int(metadata.height); y++ {
+		for x := 0; x < int(metadata.width); x++ {
 			fmt.Print(getChar(metadata.grayscale.At(x, y), config.reverse))
 		}
 		fmt.Println()
@@ -179,46 +179,45 @@ func getChar(grayscale color.Color, reverse bool) string {
 		"■",
 	}
 
-	r, g, b, intensity := grayscale.RGBA()
-	fmt.Println(r, g, b, intensity)
+	intensity, _, _, _ := grayscale.RGBA()
 
 	if reverse {
 		switch {
-		case intensity > 225:
+		case intensity > 57344:
 			return chars[0]
-		case intensity > 193:
+		case intensity > 49151:
 			return chars[1]
-		case intensity > 161:
+		case intensity > 40959:
 			return chars[2]
-		case intensity > 129:
+		case intensity > 32767:
 			return chars[3]
-		case intensity > 97:
+		case intensity > 24575:
 			return chars[4]
-		case intensity > 65:
+		case intensity > 16383:
 			return chars[5]
-		case intensity > 33:
+		case intensity > 8191:
 			return chars[6]
 		default:
 			return chars[7]
 		}
-	}
-
-	switch {
-	case intensity < 32:
-		return chars[0]
-	case intensity < 64:
-		return chars[1]
-	case intensity < 96:
-		return chars[2]
-	case intensity < 128:
-		return chars[3]
-	case intensity < 160:
-		return chars[4]
-	case intensity < 192:
-		return chars[5]
-	case intensity < 224:
-		return chars[6]
-	default:
-		return chars[7]
+	} else {
+		switch {
+		case intensity < 8192:
+			return chars[0]
+		case intensity < 16384:
+			return chars[1]
+		case intensity < 24576:
+			return chars[2]
+		case intensity < 32768:
+			return chars[3]
+		case intensity < 40960:
+			return chars[4]
+		case intensity < 49152:
+			return chars[5]
+		case intensity < 57344:
+			return chars[6]
+		default:
+			return chars[7]
+		}
 	}
 }
