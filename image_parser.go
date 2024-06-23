@@ -9,6 +9,7 @@ import (
 	"image/gif"
 	"image/jpeg"
 	"image/png"
+	"io"
 	"net/http"
 	"os"
 )
@@ -61,7 +62,7 @@ func imageToAscii(config Config) error {
 Tries to convert the file to Image and returns some metadata about it.
 */
 func collectMetadata(file *os.File) (ImageData, error) {
-	format, err := getFormat(*file)
+	format, err := getFormat(file)
 
 	if err != nil {
 		return ImageData{}, err
@@ -89,7 +90,7 @@ func collectMetadata(file *os.File) (ImageData, error) {
 Tries to collect the format of the image.
 Will fail if the format is not supported.
 */
-func getFormat(file os.File) (string, error) {
+func getFormat(file *os.File) (string, error) {
 	buffer := make([]byte, 512)
 	n, err := file.Read(buffer)
 
@@ -100,6 +101,8 @@ func getFormat(file os.File) (string, error) {
 	if n < len(buffer) {
 		buffer = buffer[:n]
 	}
+
+	_, err = file.Seek(0, io.SeekStart)
 
 	contentType := http.DetectContentType(buffer[:n])
 
