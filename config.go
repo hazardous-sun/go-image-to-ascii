@@ -132,6 +132,9 @@ func getResizeFactor(value string) (float64, error) {
 	return factor, nil
 }
 
+/*
+Checks which adjustments needs to be done for each option passed.
+*/
 func (c *Config) analyzeOptions() {
 	for _, option := range c.options {
 		switch option {

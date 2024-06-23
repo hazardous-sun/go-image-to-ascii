@@ -167,6 +167,9 @@ func printPixelsValues(metadata ImageData, config Config) {
 	}
 }
 
+/*
+Checks the intensity of the specific character to determine what character should be used to represent it.
+*/
 func getChar(grayscale color.Color, reverse bool) string {
 	chars := []string{
 		" ",
