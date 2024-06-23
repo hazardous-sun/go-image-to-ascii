@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/nfnt/resize"
 	"os"
 	"strconv"
 	"strings"
@@ -10,10 +11,18 @@ import (
 // Used to print error messages to the CLI
 func printUsage(errorMessage string) {
 	fmt.Printf(
-		"Error: %s\n" +
-			"USAGE:\n\t" +
-			"image-to-ascii [OPTIONS] [PATH] [RESIZE_FACTOR]\n" +
-			errorMessage)
+		"Error: %s\n"+
+			"USAGE:\n\t"+
+			"image-to-ascii [OPTIONS] [PATH] [RESIZE_FACTOR]\n"+
+			"OPTIONS:\n\t"+
+			"-r | --reverse\tReverses the image ASCII values\n\t"+
+			"--l2\tUses Lanczos2 interpolation method\n\t"+
+			"--l3\tUses Lanczos3 interpolation method\n\t"+
+			"--bc\tUses Bicubic interpolation method\n\t"+
+			"--bl\tUses Bilinear interpolation method\n\t"+
+			"--nn\tUses Nearest Neighbor interpolation method\n\t"+
+			"--mn\tUses Mitchell Netravali interpolation method\n",
+		errorMessage)
 }
 
 // Config
@@ -21,10 +30,11 @@ func printUsage(errorMessage string) {
 The configuration used during runtime. Contains the path to the image, the resize factor and the options.
 */
 type Config struct {
-	path         string
-	resizeFactor float64
-	reverse      bool
-	options      []string
+	path          string
+	resizeFactor  float64
+	reverse       bool
+	interpolation resize.InterpolationFunction
+	options       []string
 }
 
 /*
@@ -32,18 +42,23 @@ Returns a Config struct.
 May fail depending on the inputs provided.
 */
 func build(args []string) (Config, error) {
-	values, resizeFactor, err := getValues(args)
+	options, resizeFactor, err := getValues(args)
 
 	if err != nil {
-		return Config{}, err
+		config := Config{options: options}
+		config.analyzeOptions()
+		return config, err
 	}
 
-	return Config{
-		path:         values[0],
-		resizeFactor: resizeFactor,
-		reverse:      false,
-		options:      values[1:],
-	}, nil
+	config := Config{
+		path:          options[0],
+		resizeFactor:  resizeFactor,
+		reverse:       false,
+		interpolation: resize.Bicubic,
+		options:       options[1:],
+	}
+	config.analyzeOptions()
+	return config, nil
 }
 
 /*
@@ -70,11 +85,11 @@ func getValues(args []string) ([]string, float64, error) {
 	}
 
 	if len(path) == 0 {
-		return []string{}, 0, fmt.Errorf("no path specified")
+		return options, 0, fmt.Errorf("no path specified")
 	}
 
 	if resizeFactor == 0 {
-		return []string{}, 0, fmt.Errorf("resize factor cannot be zero")
+		return options, 0, fmt.Errorf("resize factor cannot be zero")
 	}
 
 	return append([]string{path}, options...), resizeFactor, nil
@@ -115,4 +130,35 @@ func getResizeFactor(value string) (float64, error) {
 	}
 
 	return factor, nil
+}
+
+func (c *Config) analyzeOptions() {
+	for _, option := range c.options {
+		switch option {
+		case "-r":
+			c.reverse = true
+		case "--reverse":
+			c.reverse = true
+		case "--l3":
+			c.interpolation = resize.Lanczos3
+		case "--l2":
+			c.interpolation = resize.Lanczos2
+		case "--bc":
+			c.interpolation = resize.Bicubic
+		case "--bl":
+			c.interpolation = resize.Bilinear
+		case "--nn":
+			c.interpolation = resize.NearestNeighbor
+		case "--mn":
+			c.interpolation = resize.MitchellNetravali
+		case "-h":
+			printUsage("Help page called")
+			os.Exit(0)
+		case "--help":
+			printUsage("Help page called")
+			os.Exit(0)
+		default:
+			fmt.Printf("Invalid option: '%s'\n", option)
+		}
+	}
 }

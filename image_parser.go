@@ -146,7 +146,7 @@ func resizeImage(metadata *ImageData, config Config) {
 	metadata.width = uint(float64(bounds.Dx()) * config.resizeFactor * 1.75)
 	metadata.height = uint(float64(bounds.Dy()) * config.resizeFactor)
 
-	metadata.img = resize.Resize(metadata.width, metadata.height, metadata.img, resize.Bicubic)
+	metadata.img = resize.Resize(metadata.width, metadata.height, metadata.img, config.interpolation)
 }
 
 /*
