@@ -143,10 +143,10 @@ Resizes the image based on the value of resizeFactor maintained in ImageData.
 */
 func resizeImage(metadata *ImageData, config Config) {
 	bounds := metadata.img.Bounds()
-	metadata.width = uint(float64(bounds.Dx()) * config.resizeFactor * 1.5)
+	metadata.width = uint(float64(bounds.Dx()) * config.resizeFactor * 1.75)
 	metadata.height = uint(float64(bounds.Dy()) * config.resizeFactor)
 
-	metadata.img = resize.Resize(metadata.width, metadata.height, metadata.img, resize.Lanczos3)
+	metadata.img = resize.Resize(metadata.width, metadata.height, metadata.img, resize.Bicubic)
 }
 
 /*
